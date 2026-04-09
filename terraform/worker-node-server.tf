@@ -1,8 +1,8 @@
 resource "sakuracloud_server" "k8s_worker_node" {
-  count  = 1
+  count  = 10
   name   = "worker-node-${count.index + 1}"
-  core   = 20
-  memory = 48
+  core   = 2
+  memory = 4
   disks  = [sakuracloud_disk.k8s_worker_node_disk[count.index].id]
 
   network_interface {
