@@ -1,6 +1,6 @@
 ---
-- name: Reset cluster
-  hosts: all
+- name: Delete components
+  hosts: control_plane
   any_errors_fatal: true
   become: true
   tasks:
@@ -12,6 +12,12 @@
         - /tmp/other.yaml
       changed_when: false
       failed_when: false
+
+- name: Reset cluster
+  hosts: all
+  any_errors_fatal: true
+  become: true
+  tasks:
     - name: Reset kubeadm
       ansible.builtin.shell: |
         kubeadm reset -f

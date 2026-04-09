@@ -47,7 +47,7 @@
 - name: Deploy application manifests
   vars:
     components_pod_num: 1
-    components_other_num: 10
+    components_other_num: 0
   block:
     - name: Delete previous application manifests
       ansible.builtin.command: "kubectl delete -f {{ item }} --ignore-not-found=true"
