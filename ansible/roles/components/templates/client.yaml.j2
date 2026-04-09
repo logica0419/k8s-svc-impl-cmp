@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: client-src
+data:
+  go.mod: |
+    module example
+
+    go 1.26.2
+  benchmark_test.go: |
+    package main
+
+    import (
+      "net/http"
+      "runtime"
+      "testing"
+    )
+
+    func BenchmarkService(b *testing.B) {
+      runtime.GOMAXPROCS(1)
+      for b.Loop() {
+        _, _ = http.Get("http://server:80")
+      }
+    }
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+  labels:
+    app: client
+spec:
+  restartPolicy: Never
+  containers:
+    - name: client
+      image: golang:trixie
+      workingDir: /work
+      command: ["/bin/sh", "-lc"]
+      args:
+        - go test -bench=BenchmarkService; sleep infinity
+      volumeMounts:
+        - name: src
+          mountPath: /work
+  volumes:
+    - name: src
+      configMap:
+        name: client-src

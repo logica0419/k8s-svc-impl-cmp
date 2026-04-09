@@ -1,0 +1,31 @@
+---
+- name: Common setup
+  hosts: all
+  any_errors_fatal: true
+  become: true
+  roles:
+    - wait_ssh
+    - common
+    - containerd
+    - k8s_install
+
+- name: Kubernetes bootstrap
+  hosts: control_plane
+  any_errors_fatal: true
+  become: true
+  roles:
+    - k8s_init
+
+- name: Join nodes
+  hosts: all
+  any_errors_fatal: true
+  become: true
+  roles:
+    - k8s_join
+
+- name: Application bootstrap
+  hosts: control_plane
+  any_errors_fatal: true
+  become: true
+  roles:
+    - components

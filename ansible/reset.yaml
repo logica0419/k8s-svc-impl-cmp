@@ -1,0 +1,40 @@
+---
+- name: Reset cluster
+  hosts: all
+  any_errors_fatal: true
+  become: true
+  tasks:
+    - name: Delete previous application manifests
+      ansible.builtin.command: "kubectl delete -f {{ item }} --ignore-not-found=true"
+      loop:
+        - /tmp/server.yaml
+        - /tmp/client.yaml
+        - /tmp/other.yaml
+      changed_when: false
+      failed_when: false
+    - name: Reset kubeadm
+      ansible.builtin.shell: |
+        kubeadm reset -f
+        iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
+        nft flush ruleset
+      changed_when: false
+      failed_when: false
+    - name: Remove configs
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/cni/net.d
+        - /etc/kubernetes
+        - /var/lib/etcd
+        - /var/lib/kubelet
+        - /var/lib/cni
+        - /etc/default/kubelet
+        - /root/.kube
+      failed_when: false
+    - name: Restart containerd
+      ansible.builtin.systemd:
+        name: containerd
+        state: restarted
+        enabled: true
+      failed_when: false

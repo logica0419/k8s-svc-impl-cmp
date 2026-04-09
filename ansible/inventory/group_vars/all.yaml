@@ -1,0 +1,2 @@
+# インストールするKubernetesのバージョン
+k8s_install_version: v1.35

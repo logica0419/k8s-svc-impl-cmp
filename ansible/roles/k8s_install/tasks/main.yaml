@@ -1,0 +1,33 @@
+---
+- name: Install k8s related packages
+  block:
+    - name: Add gpg key
+      ansible.builtin.apt_key:
+        url: https://pkgs.k8s.io/core:/stable:/{{ k8s_install_version }}/deb/Release.key
+    - name: Add k8s apt repository
+      ansible.builtin.apt_repository:
+        repo: deb https://pkgs.k8s.io/core:/stable:/{{ k8s_install_version }}/deb/ /
+    - name: Update apt repository
+      ansible.builtin.apt:
+        update_cache: true
+    - name: Install "kubeadm kubelet kubectl" packages
+      ansible.builtin.apt:
+        name: "{{ packages }}"
+        state: present
+      vars:
+        packages:
+          - kubeadm
+          - kubelet
+          - kubectl
+
+- name: Disable swap
+  block:
+    - name: Remove swapfile from /etc/fstab
+      ansible.posix.mount:
+        name: swap
+        fstype: swap
+        state: absent
+    - name: Disable swap
+      ansible.builtin.command: swapoff -a
+      when: ansible_swaptotal_mb > 0
+      changed_when: false

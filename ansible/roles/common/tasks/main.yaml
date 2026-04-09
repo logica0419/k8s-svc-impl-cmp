@@ -1,0 +1,48 @@
+---
+- name: Apt update
+  block:
+    - name: Update
+      ansible.builtin.apt:
+        update_cache: true
+
+- name: Allow password-less sudo for ubuntu user
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/90-ubuntu-nopasswd
+    content: |
+      ubuntu ALL=(ALL) NOPASSWD:ALL
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "/usr/sbin/visudo -cf %s"
+
+- name: Adjust kernel parameters
+  block:
+    - name: Raise kernel limits for open files
+      ansible.posix.sysctl:
+        name: "{{ item.key }}"
+        value: "{{ item.value }}"
+        state: present
+        sysctl_set: true
+        reload: true
+      loop:
+        - key: fs.file-max
+          value: "2097152"
+        - key: fs.nr_open
+          value: "1048576"
+        - key: fs.inotify.max_user_instances
+          value: "8192"
+        - key: fs.inotify.max_user_watches
+          value: "1048576"
+    - name: Raise per-user nofile limits
+      ansible.builtin.copy:
+        dest: /etc/security/limits.d/99-nofile.conf
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          * soft nofile 1048576
+          * hard nofile 1048576
+          root soft nofile 1048576
+          root hard nofile 1048576
+          ubuntu soft nofile 1048576
+          ubuntu hard nofile 1048576

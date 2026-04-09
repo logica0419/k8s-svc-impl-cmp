@@ -1,0 +1,191 @@
+version: 3
+
+# タスク定義の順番
+#
+# 1.
+#   desc
+#
+# 2.
+#   internal
+#   dir
+#   silent
+#
+# 3.
+#   vars
+#   status / sources / generates / methods / preconditions
+#   deps
+#
+# 4.
+#   cmds
+
+tasks:
+  check-binary:
+    desc: 指定されたバイナリがインストールされているか確認
+    internal: true
+    silent: true
+    cmds:
+      - |
+        if ! (type {{.BINARY}} >/dev/null 2>&1); then
+          echo "下記公式ドキュメントを参考に{{if .ALT_NAME}}{{.ALT_NAME}}{{else}}{{.BINARY}}{{end}}をインストールした後、もう一度実行してください"
+          echo {{.INSTALL_DOC}}
+          exit 1
+        fi
+
+  init:
+    desc: ワークスペースを初期化
+    cmds:
+      - task: init-env
+      - task: init-ansible
+      - task: init-terraform
+
+  init-env:
+    desc: 環境変数を初期化
+    internal: true
+    deps:
+      - task: check-binary
+        vars:
+          BINARY: direnv
+          INSTALL_DOC: https://github.com/direnv/direnv/blob/master/docs/installation.md
+    cmds:
+      - task: init-env-file
+      - direnv allow
+
+  init-env-file:
+    desc: .envrcを作成
+    internal: true
+    silent: true
+    vars:
+      SAKURACLOUD_ZONE: is1a
+    status:
+      - test -f .envrc
+    cmds:
+      - |
+        echo "さくらクラウドのアクセストークンを入力してください"
+        read SAKURACLOUD_ACCESS_TOKEN
+        echo "さくらクラウドのアクセスシークレットを入力してください"
+        read SAKURACLOUD_ACCESS_TOKEN_SECRET
+        {
+          echo "export SAKURACLOUD_ACCESS_TOKEN=$SAKURACLOUD_ACCESS_TOKEN";
+          echo "export SAKURACLOUD_ACCESS_TOKEN_SECRET=$SAKURACLOUD_ACCESS_TOKEN_SECRET";
+          echo "export SAKURACLOUD_ZONE={{.SAKURACLOUD_ZONE}}";
+        } > .envrc
+        echo ".envrcを作成しました"
+
+  reset-env:
+    desc: 環境変数を再設定
+    cmds:
+      - rm -f .envrc
+      - task: init-env
+
+  init-ansible:
+    desc: Ansibleの初期化
+    dir: ansible
+    deps:
+      - task: check-binary
+        vars:
+          BINARY: uv
+          INSTALL_DOC: https://docs.astral.sh/uv/getting-started/installation/
+    cmds:
+      - uv sync --frozen
+      - uv run ansible-galaxy install mrlesmithjr.netplan
+      - chmod +x inventory/inventory_handler.py
+
+  lint-ansible:
+    desc: AnsibleのLintを実行
+    dir: ansible
+    cmds:
+      - uv run flake8 --ignore E231 --ignore W503 --max-line-length=110 **/*.py
+      - uv run mypy .
+      - uv run ansible-lint -s --exclude inventory/**/*.yaml
+
+  format-ansible:
+    desc: Ansibleのフォーマットを実行
+    dir: ansible
+    cmds:
+      - uv run autoflake -i --remove-all-unused-imports --remove-unused-variables -r .
+      - uv run black .
+      - uv run isort .
+
+  apply-ansible:
+    desc: Ansibleを実行
+    dir: ansible
+    deps:
+      - lint-ansible
+      - format-ansible
+    cmds:
+      - uv run ansible-playbook -v setup.yaml
+
+  reset-cluster:
+    desc: Kubernetesクラスタをリセット
+    dir: ansible
+    deps:
+      - lint-ansible
+      - format-ansible
+    cmds:
+      - uv run ansible-playbook -v reset.yaml
+
+  apply-components:
+    desc: アプリケーションコンポーネントをデプロイ
+    dir: ansible
+    deps:
+      - lint-ansible
+      - format-ansible
+    cmds:
+      - uv run ansible-playbook -v apply-components.yaml
+
+  init-terraform:
+    desc: Terraformの初期化
+    dir: terraform
+    deps:
+      - task: check-binary
+        vars:
+          BINARY: terraform
+          INSTALL_DOC: https://developer.hashicorp.com/terraform/downloads
+    cmds:
+      - terraform init -migrate-state
+
+  show-ws:
+    desc: ワークスペースを表示
+    dir: terraform
+    cmds:
+      - terraform workspace show
+
+  lint-terraform:
+    desc: TerraformのLintを実行
+    internal: true
+    dir: terraform
+    deps:
+      - task: check-binary
+        vars:
+          BINARY: tflint
+          INSTALL_DOC: https://github.com/terraform-linters/tflint?tab=readme-ov-file#installation
+    cmds:
+      - tflint
+
+  format-terraform:
+    desc: Terraformのフォーマットを実行
+    dir: terraform
+    cmds:
+      - terraform fmt
+
+  apply-terraform:
+    desc: Terraformを実行
+    dir: terraform
+    deps:
+      - show-ws
+      - lint-terraform
+      - format-terraform
+    cmds:
+      - terraform apply -auto-approve
+
+  apply:
+    desc: 現在の設定を適用
+    cmds:
+      - task: apply-terraform
+      - task: apply-ansible
+
+  destroy:
+    desc: 全てのインスタンスを削除
+    dir: terraform
+    cmds:
+      - terraform destroy

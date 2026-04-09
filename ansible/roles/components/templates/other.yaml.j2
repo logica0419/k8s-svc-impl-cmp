@@ -1,0 +1,46 @@
+{% for i in range(components_other_num | int) %}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: other-{{ i + 1 }}
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: other-{{ i + 1 }}
+  template:
+    metadata:
+      labels:
+        app: other-{{ i + 1 }}
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: other-{{ i + 1 }}
+      containers:
+        - name: http-echo
+          image: hashicorp/http-echo:1.0
+          args:
+            - "-listen=:80"
+            - "-text=other-{{ i + 1 }}"
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: other-{{ i + 1 }}
+spec:
+  selector:
+    app: other-{{ i + 1 }}
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+{% if not loop.last %}
+---
+{% endif %}
+{% endfor %}

@@ -1,0 +1,7 @@
+---
+- name: Application bootstrap
+  hosts: control_plane
+  any_errors_fatal: true
+  become: true
+  roles:
+    - components
