@@ -37,7 +37,7 @@ spec:
       workingDir: /work
       command: ["/bin/sh", "-lc"]
       args:
-        - go test -bench=BenchmarkService; sleep infinity
+        - sleep infinity
       volumeMounts:
         - name: src
           mountPath: /work
