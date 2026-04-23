@@ -13,7 +13,7 @@ for _ in $(seq 1 3); do
   sleep 1
 done
 
-for _ in $(seq 1 10); do
+for _ in $(seq 1 5); do
   if kubectl exec "$POD" -- pgrep -f 'go test -bench' >/dev/null 2>&1; then
     echo "bench is already running in pod $POD" >&2
     exit 1
