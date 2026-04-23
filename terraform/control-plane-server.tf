@@ -9,7 +9,7 @@ resource "sakuracloud_server" "k8s_control_plane" {
     upstream = "shared"
   }
   disk_edit_parameter {
-    hostname        = "control-plane"
+    hostname        = "${var.prefix}-control-plane"
     password        = random_password.cluster_pass.result
     disable_pw_auth = "true"
     ssh_keys        = split("\n", trimspace(data.http.key.response_body))

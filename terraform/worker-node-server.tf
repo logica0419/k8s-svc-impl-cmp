@@ -9,7 +9,7 @@ resource "sakuracloud_server" "k8s_worker_node" {
     upstream = "shared"
   }
   disk_edit_parameter {
-    hostname        = "worker-node-${count.index + 1}"
+    hostname        = "${var.prefix}-worker-node-${count.index + 1}"
     password        = random_password.cluster_pass.result
     disable_pw_auth = "true"
     ssh_keys        = split("\n", trimspace(data.http.key.response_body))
