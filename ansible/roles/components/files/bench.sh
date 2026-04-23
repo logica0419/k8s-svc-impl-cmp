@@ -3,6 +3,11 @@
 POD=client
 CMD='go test -bench . | grep ns/op | awk "{print \$3}"'
 
+while kubectl get pods -A 2>/dev/null | grep -q 'ContainerCreating'; do
+  echo 'waiting for ContainerCreating pod to finish...'
+  sleep 1
+done
+
 for _ in $(seq 1 3); do
   if kubectl exec "$POD" -- pgrep -f 'go test -bench' >/dev/null 2>&1; then
     echo "bench is already running in pod $POD" >&2

@@ -52,6 +52,7 @@
     - name: Delete previous application manifests
       ansible.builtin.command: "kubectl delete -f {{ item }} --ignore-not-found=true"
       loop:
+        - /tmp/client.yaml
         - /tmp/other.yaml
       changed_when: false
       failed_when: false
