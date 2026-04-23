@@ -1,8 +1,8 @@
 resource "sakuracloud_server" "k8s_control_plane" {
   count  = 1
-  name   = "control-plane"
-  core   = 4
-  memory = 8
+  name   = "${var.prefix}-control-plane"
+  core   = 10
+  memory = 16
   disks  = [sakuracloud_disk.k8s_control_plane_disk[count.index].id]
 
   network_interface {
