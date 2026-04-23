@@ -1,5 +1,5 @@
 terraform {
-  required_version = "1.14.8"
+  required_version = "1.14.9"
 
   required_providers {
     sakuracloud = {
@@ -20,7 +20,7 @@ terraform {
 }
 
 data "sakuracloud_archive" "ubuntu_archive" {
-  os_type = "ubuntu2204"
+  os_type = "ubuntu2404"
 }
 
 data "http" "key" {
