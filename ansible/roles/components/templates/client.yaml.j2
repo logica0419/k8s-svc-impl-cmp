@@ -35,9 +35,7 @@ spec:
     - name: client
       image: golang:trixie
       workingDir: /work
-      command: ["/bin/sh", "-lc"]
-      args:
-        - sleep infinity
+      command: ["sleep", "infinity"]
       volumeMounts:
         - name: src
           mountPath: /work
