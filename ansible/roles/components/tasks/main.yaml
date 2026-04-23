@@ -75,3 +75,9 @@
         - /tmp/client.yaml
         - /tmp/other.yaml
       changed_when: false
+
+    - name: Copy bench.sh to control plane home directory
+      ansible.builtin.copy:
+        src: bench.sh
+        dest: /home/ubuntu/bench.sh
+        mode: "0755"
