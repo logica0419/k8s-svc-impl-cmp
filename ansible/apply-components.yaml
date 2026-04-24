@@ -1,6 +1,6 @@
 ---
-- name: Application bootstrap
-  hosts: control_plane
+- name: Apply components
+  hosts: all
   any_errors_fatal: true
   become: true
   roles:

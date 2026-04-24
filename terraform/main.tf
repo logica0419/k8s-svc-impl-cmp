@@ -32,7 +32,3 @@ resource "random_password" "cluster_pass" {
   special          = true
   override_special = "!@#&*()-_=+[]:,.?"
 }
-
-variable "prefix" {
-  type = string
-}

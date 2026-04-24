@@ -11,9 +11,7 @@ def fetch_tfstate():
 
 def main():
     inventory = {
-        "all": {},
-        "control_plane": {"hosts": []},
-        "worker_node": {"hosts": []},
+        "all": {"hosts": []},
         "_meta": {"hostvars": {}},
     }
     tfstate = fetch_tfstate()
@@ -25,10 +23,8 @@ def main():
 
     for output_key in tfstate["outputs"]:
         match output_key:
-            case "k8s_control_plane_ip_address":
-                inventory_gp = inventory["control_plane"]
-            case "k8s_worker_node_ip_address":
-                inventory_gp = inventory["worker_node"]
+            case "platform_ip_address":
+                inventory_gp = inventory["all"]
             case _:
                 continue
 

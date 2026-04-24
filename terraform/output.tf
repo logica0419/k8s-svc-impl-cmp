@@ -3,10 +3,6 @@ output "cluster_pass" {
   sensitive = true
 }
 
-output "k8s_control_plane_ip_address" {
-  value = sakuracloud_server.k8s_control_plane[*].ip_address
-}
-
-output "k8s_worker_node_ip_address" {
-  value = sakuracloud_server.k8s_worker_node[*].ip_address
+output "platform_ip_address" {
+  value = sakuracloud_server.platform[*].ip_address
 }

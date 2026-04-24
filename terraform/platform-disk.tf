@@ -1,8 +1,8 @@
-resource "sakuracloud_disk" "k8s_control_plane_disk" {
+resource "sakuracloud_disk" "platform" {
   count             = 1
-  name              = "${var.prefix}-control-plane"
+  name              = "platform"
   source_archive_id = data.sakuracloud_archive.ubuntu_archive.id
-  size              = 20
+  size              = 1 * 1024
   timeouts {
     create = "1h"
     delete = "1h"
